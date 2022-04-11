@@ -40,8 +40,11 @@ public class ClerkAdapter extends ArrayAdapter<Clerk>
 
 		Clerk clerk = getItem(position);
 
-		TextView txtAccountName = convertView.findViewById(R.id.txt_profile_name);
-		txtAccountName.setText(clerk.getFirstName() + " " + clerk.getLastName());
+		TextView txtClerkName = convertView.findViewById(R.id.txt_profile_name);
+		txtClerkName.setText(clerk.getFirstName() + " " + clerk.getLastName());
+
+		TextView txtClerkCountry = convertView.findViewById(R.id.txt_profile_username);
+		txtClerkCountry.setText(clerk.getCountry());
 
 		return convertView;
 	}

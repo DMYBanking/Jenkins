@@ -37,7 +37,6 @@ public class LoginFragment extends Fragment
     private Button btnLogin;
     private CheckBox chkRememberCred;
     private Button btnCreateAccount;
-    private Button btnLoginAdmin;
 
     private Profile lastProfileUsed;
     private Gson gson;
@@ -57,12 +56,6 @@ public class LoginFragment extends Fragment
             else if (view.getId() == btnCreateAccount.getId())
             {
                 createAccount();
-            }
-            else if(view.getId() == btnLoginAdmin.getId())
-            {
-                // admin user
-                userRole = 1;
-                validateAdminAccount();
             }
         }
     };
@@ -96,7 +89,6 @@ public class LoginFragment extends Fragment
         btnLogin = rootView.findViewById(R.id.btn_login);
         chkRememberCred = rootView.findViewById(R.id.chk_remember);
         btnCreateAccount = rootView.findViewById(R.id.btn_create_account);
-        btnLoginAdmin = rootView.findViewById(R.id.btn_login_admin);
 
         getActivity().setTitle(getResources().getString(R.string.app_name));
         ((LaunchActivity) getActivity()).removeUpButton();
@@ -119,7 +111,6 @@ public class LoginFragment extends Fragment
     {
         btnLogin.setOnClickListener(clickListener);
         btnCreateAccount.setOnClickListener(clickListener);
-        btnLoginAdmin.setOnClickListener(clickListener);
         userPreferences = getActivity().getSharedPreferences("LastProfileUsed", MODE_PRIVATE);
         chkRememberCred.setChecked(userPreferences.getBoolean("rememberMe", false));
         if (chkRememberCred.isChecked())

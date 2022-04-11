@@ -51,6 +51,13 @@ public class Clerk extends User
 //	public void setDbId(long dbId) {this.dbId = dbId;}
 
 	// methods
+	public void addAccount(Profile profile,String accountName,double accountBalance)
+	{
+		String accNo = "A" + (profile.getAccounts().size() + 1);
+		Account account = new Account(accountName, accNo, accountBalance);
+		profile.getAccounts().add(account);
+	}
+
 	//TODO: need to implement clerk methods
 	public void addLoanTransaction(Account destinationAccount,double amount)
 	{

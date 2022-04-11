@@ -5,6 +5,7 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.net.Uri;
 import android.support.annotation.NonNull;
 import android.support.design.widget.NavigationView;
 import android.support.v4.app.Fragment;
@@ -17,6 +18,7 @@ import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.support.v7.widget.Toolbar;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -36,14 +38,18 @@ import com.bankingapplication.Model.db.ApplicationDB;
 import com.example.mikebanks.bankscorpfinancial.R;
 import com.google.gson.Gson;
 
+import java.util.Arrays;
+import java.util.List;
 import java.util.Locale;
 
-public class DrawerActivity extends AppCompatActivity implements NavigationView.OnNavigationItemSelectedListener{
-
-    public enum manualNavID {
+public class DrawerActivity extends AppCompatActivity implements NavigationView.OnNavigationItemSelectedListener
+{
+    public enum manualNavID
+    {
         DASHBOARD_ID,
         ACCOUNTS_ID,
-        LOANS_ID
+        LOANS_ID,
+        CLERKS_ID;
     }
 
     private Bundle bundle;
@@ -59,6 +65,7 @@ public class DrawerActivity extends AppCompatActivity implements NavigationView.
     private Clerk userClerk;
     private Dialog loanDialog;
     private Dialog depositDialog;
+    private Dialog helpDialog;
     private Spinner topSpinner;
     private Spinner bottomSpinner;
     private ArrayAdapter<Account> accountAdapter;
@@ -104,6 +111,50 @@ public class DrawerActivity extends AppCompatActivity implements NavigationView.
             }
         }
     };
+
+    private View.OnClickListener helpClickListener = new View.OnClickListener()
+    {
+        @Override
+        public void onClick(View view)
+        {
+            if(view.getId() == btnCancel.getId())
+            {
+                helpDialog.dismiss();
+                Toast.makeText(DrawerActivity.this, "User report cancelled", Toast.LENGTH_SHORT).show();
+            }
+            else if (view.getId() == btnSuccess.getId())
+            {
+                sendUserReport();
+                helpDialog.dismiss();
+            }
+        }
+    };
+
+    private void sendUserReport()
+    {
+        EditText edtUserReport = helpDialog.findViewById(R.id.edt_complaint_help_dialog);
+        Log.i("Send email", "");
+        String[] TO = {"daniel4800@gmail.com"};
+        String[] CC = {""};
+        Intent emailIntent = new Intent(Intent.ACTION_SEND);
+
+        emailIntent.setData(Uri.parse("mailto:"));
+        emailIntent.setType("text/plain");
+        emailIntent.putExtra(Intent.EXTRA_EMAIL, TO);
+        emailIntent.putExtra(Intent.EXTRA_CC, CC);
+        emailIntent.putExtra(Intent.EXTRA_SUBJECT, "User report");
+        emailIntent.putExtra(Intent.EXTRA_TEXT,edtUserReport.getText().toString());
+        try
+        {
+            startActivity(Intent.createChooser(emailIntent, "Send mail..."));
+            finish();
+            Log.i("Finished sending email", "");
+        }
+        catch (android.content.ActivityNotFoundException ex)
+        {
+            Toast.makeText(DrawerActivity.this, "There is no email client installed.", Toast.LENGTH_SHORT).show();
+        }
+    }
 
     private DialogInterface.OnClickListener dialogClickListener = new DialogInterface.OnClickListener()
     {
@@ -151,6 +202,16 @@ public class DrawerActivity extends AppCompatActivity implements NavigationView.
             navView.getMenu().findItem(R.id.nav_loan).setTitle("Pending Loans");
             setTitle("Pending Loans");
         }
+        else if(id == manualNavID.CLERKS_ID)
+        {
+            ClerkOverviewFragment clerkOverviewFragment = new ClerkOverviewFragment();
+            if(bundle != null)
+            {
+                clerkOverviewFragment.setArguments(bundle);
+            }
+            ft.replace(R.id.flContent,clerkOverviewFragment).commit();
+            navView.setCheckedItem(R.id.nav_clerks);
+        }
 
         drawerLayout.closeDrawers();
     }
@@ -177,6 +238,7 @@ public class DrawerActivity extends AppCompatActivity implements NavigationView.
             userPreferences = this.getSharedPreferences("LastProfileUsed", MODE_PRIVATE);
             json = userPreferences.getString("adminUser","");
             userAdmin = gson.fromJson(json,Admin.class);
+            navView.getMenu().findItem(R.id.nav_deposit).setVisible(false);
             navView.getMenu().findItem(R.id.nav_loan).setVisible(false);
             navView.getMenu().findItem(R.id.nav_transfer).setVisible(false);
             navView.getMenu().findItem(R.id.nav_payment).setVisible(false);
@@ -191,6 +253,7 @@ public class DrawerActivity extends AppCompatActivity implements NavigationView.
             navView.getMenu().findItem(R.id.nav_payment).setVisible(false);
             navView.getMenu().findItem(R.id.nav_transfer).setVisible(false);
             navView.getMenu().findItem(R.id.nav_deposit).setVisible(false);
+            navView.getMenu().findItem(R.id.nav_clerks).setVisible(false);
             navView.getMenu().findItem(R.id.nav_loan).setTitle("Pending Loans");
         }
         // if regular user
@@ -200,6 +263,7 @@ public class DrawerActivity extends AppCompatActivity implements NavigationView.
             json = userPreferences.getString("profileUser","");
             userProfile = gson.fromJson(json,Profile.class);
             navView.getMenu().findItem(R.id.nav_users).setVisible(false);
+            navView.getMenu().findItem(R.id.nav_clerks).setVisible(false);
         }
         //json = userPreferences.getString("LastProfileUsed", "");
         SharedPreferences.Editor prefsEditor = userPreferences.edit();
@@ -332,7 +396,8 @@ public class DrawerActivity extends AppCompatActivity implements NavigationView.
         toggle.syncState();
     }
 
-    public void showUpButton() {
+    public void showUpButton()
+    {
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
         toolbar.setNavigationOnClickListener(new View.OnClickListener() {
             @Override
@@ -342,7 +407,8 @@ public class DrawerActivity extends AppCompatActivity implements NavigationView.
         });
     }
 
-    private void displayAccountAlertADialog(String option) {
+    private void displayAccountAlertADialog(String option)
+    {
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
 
         builder.setTitle(String.format("%s Error", option))
@@ -385,7 +451,6 @@ public class DrawerActivity extends AppCompatActivity implements NavigationView.
         btnSuccess.setOnClickListener(depositClickListener);
 
         depositDialog.show();
-
     }
 
     private void displayLoanDialog()
@@ -520,25 +585,38 @@ public class DrawerActivity extends AppCompatActivity implements NavigationView.
         return true;
     }
 
-    public void displayHelpDialog() {
-        AlertDialog.Builder builder = new AlertDialog.Builder(this);
-
-        builder.setTitle("Help")
-                .setMessage("Soon, this dialog will give the user help, depending on where they are in the app");
-
-        AlertDialog dialog = builder.create();
-        dialog.show();
+    public void displayHelpDialog()
+    {
+        helpDialog = new Dialog(this);
+        helpDialog.setContentView(R.layout.help_dialog);
+        helpDialog.setCanceledOnTouchOutside(true);
+        helpDialog.setOnCancelListener(new DialogInterface.OnCancelListener()
+        {
+            @Override
+            public void onCancel(DialogInterface dialogInterface)
+            {
+                manualNavigation(manualNavID.ACCOUNTS_ID, null);
+                Toast.makeText(DrawerActivity.this, "Help request cancelled", Toast.LENGTH_SHORT).show();
+            }
+        });
+        btnCancel = helpDialog.findViewById(R.id.btn_cancel_help_dialog);
+        btnSuccess = helpDialog.findViewById(R.id.btn_send_help_dialog);
+        btnCancel.setOnClickListener(helpClickListener);
+        btnSuccess.setOnClickListener(helpClickListener);
+        helpDialog.show();
     }
 
     @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
+    public boolean onOptionsItemSelected(MenuItem item)
+    {
         // Handle action bar item clicks here. The action bar will
         // automatically handle clicks on the Home/Up button, so long
         // as you specify a parent activity in AndroidManifest.xml.
         int id = item.getItemId();
 
         //noinspection SimplifiableIfStatement
-        if (id == R.id.action_about) {
+        if (id == R.id.action_about)
+        {
             displayHelpDialog();
         }
 
@@ -562,6 +640,13 @@ public class DrawerActivity extends AppCompatActivity implements NavigationView.
 
         switch(item.getItemId())
         {
+            case R.id.nav_users:
+                //Todo: implement fragment for nav_users
+                break;
+            case R.id.nav_clerks:
+                //Todo: implement fragment for nav_clerks
+                fragmentClass = ClerkOverviewFragment.class;
+                break;
             case R.id.nav_dashboard:
                 fragmentClass = DashboardFragment.class;
                 break;
@@ -630,7 +715,8 @@ public class DrawerActivity extends AppCompatActivity implements NavigationView.
                 fragmentClass = DashboardFragment.class;
         }
 
-        try {
+        try
+        {
             Fragment fragment = (Fragment) fragmentClass.newInstance();
             fragmentManager.beginTransaction().replace(R.id.flContent, fragment).commit();
 
@@ -638,7 +724,9 @@ public class DrawerActivity extends AppCompatActivity implements NavigationView.
             setTitle(title);
             drawerLayout.closeDrawers();
 
-        } catch (Exception e) {
+        }
+        catch (Exception e)
+        {
             e.printStackTrace();
         }
 
